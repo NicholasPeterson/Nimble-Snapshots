@@ -132,6 +132,13 @@ func _recordSnapshot(name: String?, actualExpression: Expression<Snapshotable>, 
     return false
 }
 
+func _deviceSpecificName(forName name: String) -> String {
+    var screenSize = UIScreen.mainScreen().bounds.size
+    var sysVersion = UIDevice.currentDevice().systemVersion
+    var screenSpecifier = "\(screenSize.width)\(screenSize.height)\(sysVersion)".stringByReplacingOccurrencesOfString(".", withString: "", options: nil, range: nil)
+    return name + "-\(screenSpecifier)"
+}
+
 internal var switchChecksWithRecords = false
 
 public func haveValidSnapshot() -> MatcherFunc<Snapshotable> {
@@ -149,10 +156,10 @@ public func haveValidSnapshot(named name: String) -> MatcherFunc<Snapshotable> {
     return MatcherFunc { actualExpression, failureMessage in
         let testFileLocation = actualExpression.location.file
         if (switchChecksWithRecords) {
-            return _recordSnapshot(name, actualExpression, failureMessage)
+            return _recordSnapshot(_deviceSpecificName(forName: name), actualExpression, failureMessage)
         }
 
-        return _performSnapshotTest(name, actualExpression, failureMessage)
+        return _performSnapshotTest(_deviceSpecificName(forName: name), actualExpression, failureMessage)
     }
 }
 
@@ -166,6 +173,17 @@ public func recordSnapshot() -> MatcherFunc<Snapshotable> {
 
 public func recordSnapshot(named name: String) -> MatcherFunc<Snapshotable> {
     return MatcherFunc { actualExpression, failureMessage in
-        return _recordSnapshot(name, actualExpression, failureMessage)
+        return _recordSnapshot(_deviceSpecificName(forName: name), actualExpression, failureMessage)
+    }
+}
+
+public func haveValidSnapshot(named name: String) -> MatcherFunc<Snapshotable> {
+    return MatcherFunc { actualExpression, failureMessage in
+        let testFileLocation = actualExpression.location.file
+        if (switchChecksWithRecords) {
+            return _recordSnapshot(_deviceSpecificName(forName: name), actualExpression, failureMessage)
+        }
+
+        return _performSnapshotTest(_deviceSpecificName(forName: name), actualExpression, failureMessage)
     }
 }
